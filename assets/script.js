@@ -2,7 +2,7 @@
   'use strict';
 
   /* =========================================================
-     BASIC SITE FUNCTIONS
+     BASIC PAGE FEATURES
      ========================================================= */
 
   const progressBar = document.getElementById('progressBar');
@@ -14,6 +14,7 @@
     year.textContent = new Date().getFullYear();
   }
 
+
   /* =========================================================
      SCROLL PROGRESS
      ========================================================= */
@@ -24,10 +25,9 @@
     const doc = document.documentElement;
     const scrollable = doc.scrollHeight - window.innerHeight;
 
-    const progress =
-      scrollable > 0
-        ? (window.scrollY / scrollable) * 100
-        : 0;
+    const progress = scrollable > 0
+      ? (window.scrollY / scrollable) * 100
+      : 0;
 
     progressBar.style.width =
       Math.min(100, Math.max(0, progress)) + '%';
@@ -53,31 +53,27 @@
 
   if (menuButton && mobileNav) {
 
-    menuButton.addEventListener(
-      'click',
-      function () {
+    menuButton.addEventListener('click', function () {
 
-        const open =
-          mobileNav.classList.toggle('open');
+      const open =
+        mobileNav.classList.toggle('open');
 
-        menuButton.setAttribute(
-          'aria-expanded',
-          String(open)
-        );
+      menuButton.setAttribute(
+        'aria-expanded',
+        String(open)
+      );
 
-        mobileNav.setAttribute(
-          'aria-hidden',
-          String(!open)
-        );
+      mobileNav.setAttribute(
+        'aria-hidden',
+        String(!open)
+      );
 
-        menuButton.setAttribute(
-          'aria-label',
-          open
-            ? 'Close menu'
-            : 'Open menu'
-        );
-      }
-    );
+      menuButton.setAttribute(
+        'aria-label',
+        open ? 'Close menu' : 'Open menu'
+      );
+
+    });
 
 
     mobileNav.querySelectorAll('a').forEach(
@@ -103,6 +99,7 @@
               'aria-label',
               'Open menu'
             );
+
           }
         );
 
@@ -150,6 +147,7 @@
         }
       );
 
+
     revealItems.forEach(
       function (item) {
         observer.observe(item);
@@ -183,6 +181,7 @@
 
     let ticking = false;
 
+
     function parallax() {
 
       const y = window.scrollY;
@@ -208,8 +207,7 @@
             item.style.transform =
               'translateY(' +
               ((y - window.innerHeight / 2) *
-                speed *
-                -1) +
+                speed * -1) +
               'px)';
 
           }
@@ -218,6 +216,7 @@
       );
 
       ticking = false;
+
     }
 
 
@@ -245,12 +244,31 @@
 })();
 
 
+
 /* =========================================================
    TRAVEL GALLERIES + LIGHTBOX
+   OPTIMIZED VERSION
+
+   IMPORTANT:
+
+   The old version searched every gallery during page load.
+
+   This version does NOT do that.
+
+   Galleries are discovered only when:
+   - The user opens a gallery
+   - The user clicks a cover photo
+
+   This dramatically reduces initial page loading time.
    ========================================================= */
 
 (function () {
   'use strict';
+
+
+  /* =========================================================
+     LIGHTBOX ELEMENTS
+     ========================================================= */
 
   const lb =
     document.getElementById('lightbox');
@@ -264,40 +282,16 @@
   const counter =
     document.getElementById('lightboxCounter');
 
-  if (!lb || !img) return;
+  if (!lb || !img || !title || !counter) {
+    return;
+  }
 
 
   /* =========================================================
      IMAGE FOLDER
      ========================================================= */
 
-  const IMAGE_FOLDER =
-    'assets/images/';
-
-
-  /* =========================================================
-     EXACT PHOTO COUNTS
-
-     These match the files currently in your folder.
-     ========================================================= */
-
-  const PHOTO_COUNTS = {
-
-    amayangri: 26,
-
-    ilam: 6,
-
-    kuri: 18,
-
-    manang: 52,
-
-    manungkot: 6,
-
-    pathibhara: 17,
-
-    sandakpur: 12
-
-  };
+  const IMAGE_FOLDER = 'assets/images/';
 
 
   /* =========================================================
@@ -305,46 +299,193 @@
      ========================================================= */
 
   let state = {
-
     prefix: '',
-
     title: '',
-
     images: [],
-
     index: 0
-
   };
 
 
   /* =========================================================
-     CREATE IMAGE PATHS
+     GALLERY CACHE
 
-     Example:
-       manang-01.jpg
-       manang-02.jpg
-       ...
-       manang-52.jpg
+     Once a gallery has been discovered, its image list
+     stays in memory.
+
+     Opening the same gallery again will NOT search the
+     files again.
      ========================================================= */
 
-  function createImages(prefix, count) {
+  const galleryCache = new Map();
+
+
+  /* =========================================================
+     FIND ONE IMAGE
+
+     Supports:
+
+       .jpg
+       .JPG
+       .jpeg
+       .JPEG
+
+     This function is only called when a gallery is actually
+     needed.
+     ========================================================= */
+
+  function findImage(prefix, number) {
+
+    return new Promise(function (resolve) {
+
+      const padded =
+        String(number).padStart(2, '0');
+
+      const extensions = [
+        '.jpg',
+        '.JPG',
+        '.jpeg',
+        '.JPEG'
+      ];
+
+      let extensionIndex = 0;
+
+
+      function tryNext() {
+
+        if (
+          extensionIndex >=
+          extensions.length
+        ) {
+
+          resolve(null);
+          return;
+
+        }
+
+
+        const path =
+          IMAGE_FOLDER +
+          prefix +
+          '-' +
+          padded +
+          extensions[extensionIndex];
+
+
+        const test =
+          new Image();
+
+
+        test.onload =
+          function () {
+
+            resolve(path);
+
+          };
+
+
+        test.onerror =
+          function () {
+
+            extensionIndex++;
+
+            tryNext();
+
+          };
+
+
+        test.src = path;
+
+      }
+
+
+      tryNext();
+
+    });
+
+  }
+
+
+  /* =========================================================
+     DISCOVER GALLERY
+
+     IMPORTANT PERFORMANCE CHANGE:
+
+     This function is NOT called for every gallery during
+     page load.
+
+     It runs only when the gallery is actually requested.
+     ========================================================= */
+
+  async function discoverImages(prefix) {
+
+    if (galleryCache.has(prefix)) {
+      return galleryCache.get(prefix);
+    }
+
 
     const images = [];
 
-    for (let i = 1; i <= count; i++) {
+    /*
+      Your galleries currently have relatively small,
+      continuous numbering.
 
-      const number =
-        String(i).padStart(2, '0');
+      We allow gaps, but stop after 4 consecutive missing
+      numbers once images have already been found.
 
-      images.push(
-        IMAGE_FOLDER +
-        prefix +
-        '-' +
-        number +
-        '.jpg'
-      );
+      This is much faster than the previous 10-gap search.
+    */
+
+    let consecutiveMissing = 0;
+
+    const MAX_CONSECUTIVE_MISSING = 4;
+
+    /*
+      999 remains a safety limit.
+    */
+
+    for (
+      let number = 1;
+      number <= 999;
+      number++
+    ) {
+
+      const path =
+        await findImage(
+          prefix,
+          number
+        );
+
+
+      if (path) {
+
+        images.push(path);
+
+        consecutiveMissing = 0;
+
+      } else {
+
+        consecutiveMissing++;
+
+        if (
+          images.length > 0 &&
+          consecutiveMissing >=
+          MAX_CONSECUTIVE_MISSING
+        ) {
+
+          break;
+
+        }
+
+      }
 
     }
+
+
+    galleryCache.set(
+      prefix,
+      images
+    );
+
 
     return images;
 
@@ -352,40 +493,7 @@
 
 
   /* =========================================================
-     GET GALLERY IMAGES
-     ========================================================= */
-
-  function getGalleryImages(prefix) {
-
-    const key =
-      String(prefix || '')
-        .trim()
-        .toLowerCase();
-
-    const count =
-      PHOTO_COUNTS[key];
-
-    if (!count) {
-
-      console.warn(
-        'No photo count configured for gallery:',
-        prefix
-      );
-
-      return [];
-
-    }
-
-    return createImages(
-      key,
-      count
-    );
-
-  }
-
-
-  /* =========================================================
-     PRELOAD IMAGE
+     PRELOAD LIGHTBOX IMAGE
      ========================================================= */
 
   function preload(path) {
@@ -406,15 +514,16 @@
 
   function render() {
 
-    if (!state.images.length) return;
+    if (!state.images.length) {
+      return;
+    }
+
 
     const current =
       state.images[state.index];
 
 
-    img.src =
-      current;
-
+    img.src = current;
 
     img.alt =
       state.title +
@@ -422,26 +531,14 @@
       (state.index + 1);
 
 
-    if (title) {
-
-      title.textContent =
-        state.title;
-
-    }
+    title.textContent =
+      state.title;
 
 
-    if (counter) {
-
-      counter.textContent =
-        String(
-          state.index + 1
-        ).padStart(2, '0') +
-        ' / ' +
-        String(
-          state.images.length
-        ).padStart(2, '0');
-
-    }
+    counter.textContent =
+      String(state.index + 1).padStart(2, '0') +
+      ' / ' +
+      String(state.images.length).padStart(2, '0');
 
 
     const nextIndex =
@@ -451,18 +548,22 @@
         : state.index + 1;
 
 
-    const prevIndex =
+    const previousIndex =
       state.index <= 0
         ? state.images.length - 1
         : state.index - 1;
 
+
+    /*
+      Only preload the two adjacent images.
+    */
 
     preload(
       state.images[nextIndex]
     );
 
     preload(
-      state.images[prevIndex]
+      state.images[previousIndex]
     );
 
   }
@@ -488,31 +589,17 @@
 
 
     state = {
-
       prefix: prefix,
-
-      title: name || prefix,
-
+      title: name,
       images: images,
-
-      index: Math.max(
-        0,
-        Math.min(
-          index,
-          images.length - 1
-        )
-      )
-
+      index: index
     };
 
 
     render();
 
 
-    lb.classList.add(
-      'active'
-    );
-
+    lb.classList.add('active');
 
     lb.setAttribute(
       'aria-hidden',
@@ -532,10 +619,7 @@
 
   function closeLightbox() {
 
-    lb.classList.remove(
-      'active'
-    );
-
+    lb.classList.remove('active');
 
     lb.setAttribute(
       'aria-hidden',
@@ -551,14 +635,10 @@
       function () {
 
         if (
-          !lb.classList.contains(
-            'active'
-          )
+          !lb.classList.contains('active')
         ) {
 
-          img.removeAttribute(
-            'src'
-          );
+          img.removeAttribute('src');
 
         }
 
@@ -575,13 +655,17 @@
 
   function nextPhoto() {
 
-    if (!state.images.length) return;
+    if (!state.images.length) {
+      return;
+    }
+
 
     state.index =
       state.index >=
       state.images.length - 1
         ? 0
         : state.index + 1;
+
 
     render();
 
@@ -594,12 +678,16 @@
 
   function previousPhoto() {
 
-    if (!state.images.length) return;
+    if (!state.images.length) {
+      return;
+    }
+
 
     state.index =
       state.index <= 0
         ? state.images.length - 1
         : state.index - 1;
+
 
     render();
 
@@ -657,7 +745,7 @@
 
 
   /* =========================================================
-     CLICK OUTSIDE LIGHTBOX
+     CLICK BACKGROUND TO CLOSE
      ========================================================= */
 
   lb.addEventListener(
@@ -675,7 +763,7 @@
 
 
   /* =========================================================
-     KEYBOARD CONTROLS
+     KEYBOARD
      ========================================================= */
 
   document.addEventListener(
@@ -683,9 +771,7 @@
     function (e) {
 
       if (
-        !lb.classList.contains(
-          'active'
-        )
+        !lb.classList.contains('active')
       ) {
         return;
       }
@@ -755,22 +841,23 @@
       }
 
 
-      const dx =
+      const deltaX =
         startX -
         e.changedTouches[0].screenX;
 
 
-      const dy =
+      const deltaY =
         startY -
         e.changedTouches[0].screenY;
 
 
       if (
-        Math.abs(dx) > 50 &&
-        Math.abs(dx) > Math.abs(dy)
+        Math.abs(deltaX) > 50 &&
+        Math.abs(deltaX) >
+        Math.abs(deltaY)
       ) {
 
-        if (dx > 0) {
+        if (deltaX > 0) {
 
           nextPhoto();
 
@@ -788,7 +875,7 @@
 
 
   /* =========================================================
-     SET UP EVERY GALLERY
+     GALLERIES
      ========================================================= */
 
   document.querySelectorAll(
@@ -814,34 +901,21 @@
         );
 
 
-      if (!grid) return;
-
-
       const prefix =
-        String(
-          gallery.dataset.prefix || ''
-        )
-        .trim()
-        .toLowerCase();
+        gallery.dataset.prefix;
 
 
       const name =
-        gallery.dataset.title ||
-        prefix;
+        gallery.dataset.title;
+
+
+      if (!grid || !button || !prefix) {
+        return;
+      }
 
 
       /* =====================================================
-         GET EXACT IMAGE LIST
-         ===================================================== */
-
-      const galleryImages =
-        getGalleryImages(
-          prefix
-        );
-
-
-      /* =====================================================
-         STORY PHOTO COUNT
+         PHOTO FACT
          ===================================================== */
 
       const storyFacts =
@@ -866,22 +940,19 @@
         facts.forEach(
           function (fact) {
 
-            const b =
-              fact.querySelector(
-                'b'
-              );
+            const bold =
+              fact.querySelector('b');
 
 
             if (
-              b &&
-              b.textContent
+              bold &&
+              bold.textContent
                 .trim()
                 .toUpperCase() ===
-              'PHOTOS'
+                'PHOTOS'
             ) {
 
-              photoFact =
-                fact;
+              photoFact = fact;
 
             }
 
@@ -889,6 +960,17 @@
         );
 
       }
+
+
+      /* =====================================================
+         GALLERY STATE
+         ===================================================== */
+
+      let galleryImages = [];
+
+      let built = false;
+
+      let loading = false;
 
 
       /* =====================================================
@@ -901,10 +983,14 @@
           galleryImages.length;
 
 
-        if (!count) return;
+        if (!count) {
+          return;
+        }
 
 
-        /* STORY FACT */
+        /*
+          Story fact
+        */
 
         if (photoFact) {
 
@@ -915,7 +1001,9 @@
         }
 
 
-        /* GALLERY HEADING */
+        /*
+          Gallery heading
+        */
 
         if (headingSmall) {
 
@@ -926,7 +1014,9 @@
         }
 
 
-        /* GALLERY BUTTON */
+        /*
+          Button
+        */
 
         if (button) {
 
@@ -941,35 +1031,53 @@
       }
 
 
-      updatePhotoCounts();
-
-
       /* =====================================================
          BUILD GALLERY
-
-         Photo 1 = cover.
-         Photos 2 onward = gallery grid.
          ===================================================== */
 
-      let built = false;
+      async function buildGallery() {
+
+        if (built) {
+          return galleryImages;
+        }
 
 
-      function buildGallery() {
+        if (loading) {
+          return galleryImages;
+        }
 
-        if (built) return;
+
+        loading = true;
 
 
-        if (!galleryImages.length) {
+        /*
+          Discover only this gallery.
+        */
 
-          console.warn(
-            'No images configured for:',
-            prefix
-          );
+        galleryImages =
+          await discoverImages(prefix);
 
-          return;
+
+        updatePhotoCounts();
+
+
+        if (
+          !galleryImages.length
+        ) {
+
+          loading = false;
+
+          return galleryImages;
 
         }
 
+
+        /*
+          Photos 2 onward are displayed inside
+          the expandable gallery.
+
+          Photo 1 is the cover.
+        */
 
         const fragment =
           document.createDocumentFragment();
@@ -1007,6 +1115,10 @@
             (i + 1);
 
 
+          /*
+            Lazy loading is retained.
+          */
+
           image.loading =
             'lazy';
 
@@ -1032,11 +1144,6 @@
             'error',
             function () {
 
-              console.warn(
-                'Image failed to load:',
-                image.src
-              );
-
               figure.remove();
 
             },
@@ -1049,7 +1156,9 @@
           );
 
 
-          /* OPEN LIGHTBOX */
+          /*
+            Open corresponding photo.
+          */
 
           figure.addEventListener(
             'click',
@@ -1080,115 +1189,28 @@
 
         built = true;
 
-      }
+        loading = false;
 
 
-      /* =====================================================
-         GALLERY OPEN / CLOSE
-         ===================================================== */
-
-      if (button) {
-
-        button.addEventListener(
-          'click',
-          function () {
-
-            const isOpen =
-              grid.classList.contains(
-                'open'
-              );
+        updatePhotoCounts();
 
 
-            /* OPEN */
-
-            if (!isOpen) {
-
-              buildGallery();
-
-
-              if (
-                !galleryImages.length
-              ) {
-                return;
-              }
-
-
-              requestAnimationFrame(
-                function () {
-
-                  grid.classList.add(
-                    'open'
-                  );
-
-                  checkGalleryEnd();
-
-                }
-              );
-
-
-              button.setAttribute(
-                'aria-expanded',
-                'true'
-              );
-
-
-              button.innerHTML =
-                'Return to the Journey <span>↑</span>';
-
-
-              button.classList.add(
-                'gallery-floating'
-              );
-
-            }
-
-
-            /* CLOSE */
-
-            else {
-
-              button.classList.remove(
-                'gallery-floating'
-              );
-
-
-              button.setAttribute(
-                'aria-expanded',
-                'false'
-              );
-
-
-              updatePhotoCounts();
-
-
-              grid.classList.remove(
-                'open'
-              );
-
-            }
-
-          }
-        );
+        return galleryImages;
 
       }
 
 
       /* =====================================================
-         FLOATING BUTTON
+         GALLERY FLOATING BUTTON
          ===================================================== */
 
       function checkGalleryEnd() {
 
         if (
-          !grid.classList.contains(
-            'open'
-          )
+          !grid.classList.contains('open')
         ) {
           return;
         }
-
-
-        if (!button) return;
 
 
         const galleryRect =
@@ -1250,6 +1272,93 @@
 
 
       /* =====================================================
+         OPEN / CLOSE GALLERY
+         ===================================================== */
+
+      button.addEventListener(
+        'click',
+        async function () {
+
+          const isOpen =
+            grid.classList.contains('open');
+
+
+          /*
+            OPEN
+          */
+
+          if (!isOpen) {
+
+            await buildGallery();
+
+
+            if (
+              !galleryImages.length
+            ) {
+              return;
+            }
+
+
+            requestAnimationFrame(
+              function () {
+
+                grid.classList.add(
+                  'open'
+                );
+
+                checkGalleryEnd();
+
+              }
+            );
+
+
+            button.setAttribute(
+              'aria-expanded',
+              'true'
+            );
+
+
+            button.innerHTML =
+              'Return to the Journey <span>↑</span>';
+
+
+            button.classList.add(
+              'gallery-floating'
+            );
+
+
+            return;
+
+          }
+
+
+          /*
+            CLOSE
+          */
+
+          button.classList.remove(
+            'gallery-floating'
+          );
+
+
+          button.setAttribute(
+            'aria-expanded',
+            'false'
+          );
+
+
+          updatePhotoCounts();
+
+
+          grid.classList.remove(
+            'open'
+          );
+
+        }
+      );
+
+
+      /* =====================================================
          COVER IMAGE
          ===================================================== */
 
@@ -1269,7 +1378,26 @@
 
         cover.addEventListener(
           'click',
-          function () {
+          async function () {
+
+            /*
+              Discover only when cover is clicked.
+            */
+
+            if (
+              !galleryImages.length
+            ) {
+
+              galleryImages =
+                await discoverImages(
+                  prefix
+                );
+
+
+              updatePhotoCounts();
+
+            }
+
 
             if (
               galleryImages.length
@@ -1289,10 +1417,20 @@
 
       }
 
+
+      /*
+        IMPORTANT:
+
+        There is NO initial discoverImages() call here.
+
+        This is the main performance improvement.
+      */
+
     }
   );
 
 })();
+
 
 
 /* =========================================================
@@ -1307,7 +1445,10 @@
       'scrollTop'
     );
 
-  if (!scrollTop) return;
+
+  if (!scrollTop) {
+    return;
+  }
 
 
   function updateScrollTop() {

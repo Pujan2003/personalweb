@@ -13,7 +13,6 @@
 
     const doc=document.documentElement;
     const scrollable=doc.scrollHeight-window.innerHeight;
-
     const progress=
       scrollable>0
       ?(window.scrollY/scrollable)*100
@@ -68,7 +67,6 @@
         );
       }
     );
-
 
     mobileNav.querySelectorAll('a').forEach(
       function(link){
@@ -139,7 +137,6 @@
           rootMargin:'0px 0px -40px 0px'
         }
       );
-
 
     revealItems.forEach(
       function(item){
@@ -277,13 +274,16 @@
   /* =========================================================
      FIND IMAGE
 
-     Supports both:
+     Supports:
        .jpg
+       .JPG
        .jpeg
+       .JPEG
 
-     Example:
-       manang-01.jpg
-       manang-02.jpeg
+     IMPORTANT:
+     The old version stopped at the first missing filename.
+     This version checks all possible extensions and returns
+     null only when that specific number truly doesn't exist.
      ========================================================= */
 
   function findImage(prefix,n){
@@ -294,56 +294,55 @@
         const number=
           String(n).padStart(2,'0');
 
-        const jpg=
-          IMAGE_FOLDER+
-          prefix+
-          '-'+
-          number+
-          '.jpg';
+        const extensions=[
+          '.jpg',
+          '.JPG',
+          '.jpeg',
+          '.JPEG'
+        ];
 
-        const jpeg=
-          IMAGE_FOLDER+
-          prefix+
-          '-'+
-          number+
-          '.jpeg';
+        let current=0;
 
+        function testNext(){
 
-        const test=
-          new Image();
+          if(current>=extensions.length){
 
+            resolve(null);
+            return;
 
-        test.onload=
-          function(){
-            resolve(jpg);
-          };
+          }
 
+          const path=
+            IMAGE_FOLDER+
+            prefix+
+            '-'+
+            number+
+            extensions[current];
 
-        test.onerror=
-          function(){
+          const test=
+            new Image();
 
-            const testJpeg=
-              new Image();
+          test.onload=
+            function(){
 
+              resolve(path);
 
-            testJpeg.onload=
-              function(){
-                resolve(jpeg);
-              };
+            };
 
+          test.onerror=
+            function(){
 
-            testJpeg.onerror=
-              function(){
-                resolve(null);
-              };
+              current++;
 
+              testNext();
 
-            testJpeg.src=jpeg;
+            };
 
-          };
+          test.src=path;
 
+        }
 
-        test.src=jpg;
+        testNext();
 
       }
     );
@@ -360,7 +359,19 @@
        prefix-03
        ...
 
-     Stops at the first missing number.
+     Supports mixed JPG/JPG/JPEG/JPEG extensions.
+
+     IMPORTANT:
+     A missing number does NOT stop discovery.
+
+     Example:
+
+       manang-01.jpg
+       manang-02.JPG
+       manang-03.jpg
+       manang-05.JPG
+
+     All four can still be discovered.
 
      Maximum: 999 photos.
      ========================================================= */
@@ -369,10 +380,30 @@
 
     const images=[];
 
-    let number=1;
+    /*
+      We allow gaps between numbers.
 
+      For example:
+      01
+      02
+      04
+      05
 
-    while(number<=999){
+      will still work.
+
+      We stop only after several consecutive
+      missing numbers near the end.
+    */
+
+    let consecutiveMissing=0;
+
+    const MAX_CONSECUTIVE_MISSING=10;
+
+    for(
+      let number=1;
+      number<=999;
+      number++
+    ){
 
       const path=
         await findImage(
@@ -380,18 +411,34 @@
           number
         );
 
+      if(path){
 
-      if(!path){
-        break;
+        images.push(path);
+
+        consecutiveMissing=0;
+
+      }else{
+
+        consecutiveMissing++;
+
+        /*
+          If we have found photos before and then
+          encounter many missing numbers in a row,
+          assume the gallery has ended.
+        */
+
+        if(
+          images.length>0 &&
+          consecutiveMissing>=MAX_CONSECUTIVE_MISSING
+        ){
+
+          break;
+
+        }
+
       }
 
-
-      images.push(path);
-
-      number++;
-
     }
-
 
     return images;
 
@@ -422,23 +469,18 @@
 
     if(!s.images.length)return;
 
-
     const current=
       s.images[s.index];
 
-
     img.src=current;
-
 
     img.alt=
       s.title+
       ' photograph '+
       (s.index+1);
 
-
     title.textContent=
       s.title;
-
 
     counter.textContent=
       String(s.index+1).padStart(2,'0')+
@@ -450,7 +492,6 @@
       s.index>=s.images.length-1
       ?0
       :s.index+1;
-
 
     const prevIndex=
       s.index<=0
@@ -487,7 +528,6 @@
       return;
     }
 
-
     s={
       prefix:prefix,
       title:name,
@@ -495,20 +535,16 @@
       index:index
     };
 
-
     render();
-
 
     lb.classList.add(
       'active'
     );
 
-
     lb.setAttribute(
       'aria-hidden',
       'false'
     );
-
 
     document.body.style.overflow=
       'hidden';
@@ -526,15 +562,12 @@
       'active'
     );
 
-
     lb.setAttribute(
       'aria-hidden',
       'true'
     );
 
-
     document.body.style.overflow='';
-
 
     setTimeout(
       function(){
@@ -566,12 +599,10 @@
 
     if(!s.images.length)return;
 
-
     s.index=
       s.index>=s.images.length-1
       ?0
       :s.index+1;
-
 
     render();
 
@@ -586,12 +617,10 @@
 
     if(!s.images.length)return;
 
-
     s.index=
       s.index<=0
       ?s.images.length-1
       :s.index-1;
-
 
     render();
 
@@ -657,7 +686,9 @@
     function(e){
 
       if(e.target===lb){
+
         close();
+
       }
 
     }
@@ -680,19 +711,22 @@
         return;
       }
 
-
       if(e.key==='Escape'){
-        close();
-      }
 
+        close();
+
+      }
 
       if(e.key==='ArrowRight'){
+
         next();
+
       }
 
-
       if(e.key==='ArrowLeft'){
+
         prev();
+
       }
 
     }
@@ -738,11 +772,9 @@
         return;
       }
 
-
       const dx=
         sx-
         e.changedTouches[0].screenX;
-
 
       const dy=
         sy-
@@ -755,9 +787,13 @@
       ){
 
         if(dx>0){
+
           next();
+
         }else{
+
           prev();
+
         }
 
       }
@@ -805,6 +841,7 @@
       /*
         The PHOTO fact inside the story.
       */
+
       const storyFacts=
         g.parentElement.querySelector(
           '.story-facts'
@@ -851,26 +888,16 @@
       /*
         Actual images found in the folder.
       */
+
       let galleryImages=[];
 
-
       let built=false;
-
 
       let discovering=false;
 
 
       /* =====================================================
          UPDATE ALL PHOTO COUNTS
-
-         If 52 image files exist:
-
-           Button = 52 photos
-           Story = PHOTOS 52
-           Heading = 53 photographs · cover shown above
-
-         The +1 on the heading represents the cover
-         being shown above the gallery.
          ===================================================== */
 
       function updatePhotoCounts(){
@@ -880,15 +907,14 @@
 
 
         if(!count){
+
           return;
+
         }
 
 
         /*
           1. STORY FACT
-
-          Example:
-          PHOTOS 52
         */
 
         if(photoFact){
@@ -902,12 +928,6 @@
 
         /*
           2. GALLERY HEADING
-
-          Example:
-          53 photographs · cover shown above
-
-          The gallery contains the numbered photos,
-          while the cover is already displayed above.
         */
 
         if(headingSmall){
@@ -921,9 +941,6 @@
 
         /*
           3. GALLERY BUTTON
-
-          Example:
-          Enter the Photo Chapter 52 photos ↓
         */
 
         if(btn){
@@ -949,7 +966,9 @@
           built||
           discovering
         ){
+
           return;
+
         }
 
 
@@ -959,6 +978,7 @@
         /*
           Automatically find all images.
         */
+
         galleryImages=
           await discoverImages(
             prefix
@@ -968,12 +988,14 @@
         /*
           Update every visible number.
         */
+
         updatePhotoCounts();
 
 
         /*
           Cover must exist.
         */
+
         if(
           galleryImages.length===0
         ){
@@ -1063,6 +1085,7 @@
           /*
             Open lightbox at correct image.
           */
+
           fig.addEventListener(
             'click',
             function(){
@@ -1122,7 +1145,9 @@
               if(
                 !galleryImages.length
               ){
+
                 return;
+
               }
 
 
@@ -1197,7 +1222,9 @@
             'open'
           )
         ){
+
           return;
+
         }
 
 
@@ -1315,10 +1342,6 @@
 
       /* =====================================================
          INITIAL PHOTO COUNT
-
-         This runs immediately when the page loads,
-         so the numbers are correct before the gallery
-         is opened.
          ===================================================== */
 
       (async function(){

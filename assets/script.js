@@ -1,31 +1,42 @@
-(function(){
+(function () {
   'use strict';
 
-  const progressBar=document.getElementById('progressBar');
-  const menuButton=document.getElementById('menuButton');
-  const mobileNav=document.getElementById('mobileNav');
-  const year=document.getElementById('year');
+  /* =========================================================
+     BASIC SITE FUNCTIONS
+     ========================================================= */
 
-  if(year) year.textContent=new Date().getFullYear();
+  const progressBar = document.getElementById('progressBar');
+  const menuButton = document.getElementById('menuButton');
+  const mobileNav = document.getElementById('mobileNav');
+  const year = document.getElementById('year');
 
-  function updateProgress(){
-    if(!progressBar)return;
+  if (year) {
+    year.textContent = new Date().getFullYear();
+  }
 
-    const doc=document.documentElement;
-    const scrollable=doc.scrollHeight-window.innerHeight;
-    const progress=
-      scrollable>0
-      ?(window.scrollY/scrollable)*100
-      :0;
+  /* =========================================================
+     SCROLL PROGRESS
+     ========================================================= */
 
-    progressBar.style.width=
-      Math.min(100,Math.max(0,progress))+'%';
+  function updateProgress() {
+    if (!progressBar) return;
+
+    const doc = document.documentElement;
+    const scrollable = doc.scrollHeight - window.innerHeight;
+
+    const progress =
+      scrollable > 0
+        ? (window.scrollY / scrollable) * 100
+        : 0;
+
+    progressBar.style.width =
+      Math.min(100, Math.max(0, progress)) + '%';
   }
 
   window.addEventListener(
     'scroll',
     updateProgress,
-    {passive:true}
+    { passive: true }
   );
 
   window.addEventListener(
@@ -40,13 +51,13 @@
      MOBILE MENU
      ========================================================= */
 
-  if(menuButton&&mobileNav){
+  if (menuButton && mobileNav) {
 
     menuButton.addEventListener(
       'click',
-      function(){
+      function () {
 
-        const open=
+        const open =
           mobileNav.classList.toggle('open');
 
         menuButton.setAttribute(
@@ -62,18 +73,19 @@
         menuButton.setAttribute(
           'aria-label',
           open
-          ?'Close menu'
-          :'Open menu'
+            ? 'Close menu'
+            : 'Open menu'
         );
       }
     );
 
+
     mobileNav.querySelectorAll('a').forEach(
-      function(link){
+      function (link) {
 
         link.addEventListener(
           'click',
-          function(){
+          function () {
 
             mobileNav.classList.remove('open');
 
@@ -104,19 +116,19 @@
      REVEAL ANIMATIONS
      ========================================================= */
 
-  const revealItems=
+  const revealItems =
     document.querySelectorAll('.reveal');
 
-  if('IntersectionObserver' in window){
+  if ('IntersectionObserver' in window) {
 
-    const observer=
+    const observer =
       new IntersectionObserver(
-        function(entries,obs){
+        function (entries, obs) {
 
           entries.forEach(
-            function(entry){
+            function (entry) {
 
-              if(entry.isIntersecting){
+              if (entry.isIntersecting) {
 
                 entry.target.classList.add(
                   'visible'
@@ -133,21 +145,21 @@
 
         },
         {
-          threshold:.12,
-          rootMargin:'0px 0px -40px 0px'
+          threshold: 0.12,
+          rootMargin: '0px 0px -40px 0px'
         }
       );
 
     revealItems.forEach(
-      function(item){
+      function (item) {
         observer.observe(item);
       }
     );
 
-  }else{
+  } else {
 
     revealItems.forEach(
-      function(item){
+      function (item) {
         item.classList.add('visible');
       }
     );
@@ -159,43 +171,45 @@
      PARALLAX
      ========================================================= */
 
-  const parallaxItems=
+  const parallaxItems =
     document.querySelectorAll('[data-parallax]');
 
-  if(
+  if (
     !window.matchMedia(
       '(prefers-reduced-motion: reduce)'
     ).matches &&
     parallaxItems.length
-  ){
+  ) {
 
-    let ticking=false;
+    let ticking = false;
 
-    function parallax(){
+    function parallax() {
 
-      const y=window.scrollY;
+      const y = window.scrollY;
 
       parallaxItems.forEach(
-        function(item){
+        function (item) {
 
-          const speed=
+          const speed =
             parseFloat(
               item.getAttribute(
                 'data-parallax'
               )
-            )||0;
+            ) || 0;
 
-          const rect=
+          const rect =
             item.getBoundingClientRect();
 
-          if(
-            rect.bottom>0 &&
-            rect.top<window.innerHeight
-          ){
+          if (
+            rect.bottom > 0 &&
+            rect.top < window.innerHeight
+          ) {
 
-            item.style.transform=
-              'translateY('+
-              ((y-window.innerHeight/2)*speed*-1)+
+            item.style.transform =
+              'translateY(' +
+              ((y - window.innerHeight / 2) *
+                speed *
+                -1) +
               'px)';
 
           }
@@ -203,240 +217,132 @@
         }
       );
 
-      ticking=false;
+      ticking = false;
     }
 
 
     window.addEventListener(
       'scroll',
-      function(){
+      function () {
 
-        if(!ticking){
+        if (!ticking) {
 
           window.requestAnimationFrame(
             parallax
           );
 
-          ticking=true;
+          ticking = true;
 
         }
 
       },
-      {passive:true}
+      { passive: true }
     );
 
   }
+
 
 })();
 
 
 /* =========================================================
-   AUTOMATIC TRAVEL GALLERIES + LIGHTBOX
+   TRAVEL GALLERIES + LIGHTBOX
    ========================================================= */
 
-(function(){
+(function () {
   'use strict';
 
-  const lb=
+  const lb =
     document.getElementById('lightbox');
 
-  const img=
+  const img =
     document.getElementById('lightboxImage');
 
-  const title=
+  const title =
     document.getElementById('lightboxTitle');
 
-  const counter=
+  const counter =
     document.getElementById('lightboxCounter');
 
-  if(!lb)return;
+  if (!lb || !img) return;
 
 
   /* =========================================================
      IMAGE FOLDER
      ========================================================= */
 
-  const IMAGE_FOLDER='assets/images/';
+  const IMAGE_FOLDER =
+    'assets/images/';
+
+
+  /* =========================================================
+     EXACT PHOTO COUNTS
+
+     These match the files currently in your folder.
+     ========================================================= */
+
+  const PHOTO_COUNTS = {
+
+    amayangri: 26,
+
+    ilam: 6,
+
+    kuri: 18,
+
+    manang: 52,
+
+    manungkot: 6,
+
+    pathibhara: 17,
+
+    sandakpur: 12
+
+  };
 
 
   /* =========================================================
      LIGHTBOX STATE
      ========================================================= */
 
-  let s={
-    prefix:'',
-    title:'',
-    images:[],
-    index:0
+  let state = {
+
+    prefix: '',
+
+    title: '',
+
+    images: [],
+
+    index: 0
+
   };
 
 
   /* =========================================================
-     FIND IMAGE
-
-     Supports:
-       .jpg
-       .JPG
-       .jpeg
-       .JPEG
-
-     IMPORTANT:
-     The old version stopped at the first missing filename.
-     This version checks all possible extensions and returns
-     null only when that specific number truly doesn't exist.
-     ========================================================= */
-
-  function findImage(prefix,n){
-
-    return new Promise(
-      function(resolve){
-
-        const number=
-          String(n).padStart(2,'0');
-
-        const extensions=[
-          '.jpg',
-          '.JPG',
-          '.jpeg',
-          '.JPEG'
-        ];
-
-        let current=0;
-
-        function testNext(){
-
-          if(current>=extensions.length){
-
-            resolve(null);
-            return;
-
-          }
-
-          const path=
-            IMAGE_FOLDER+
-            prefix+
-            '-'+
-            number+
-            extensions[current];
-
-          const test=
-            new Image();
-
-          test.onload=
-            function(){
-
-              resolve(path);
-
-            };
-
-          test.onerror=
-            function(){
-
-              current++;
-
-              testNext();
-
-            };
-
-          test.src=path;
-
-        }
-
-        testNext();
-
-      }
-    );
-
-  }
-
-
-  /* =========================================================
-     AUTOMATIC PHOTO DISCOVERY
-
-     Finds:
-       prefix-01
-       prefix-02
-       prefix-03
-       ...
-
-     Supports mixed JPG/JPG/JPEG/JPEG extensions.
-
-     IMPORTANT:
-     A missing number does NOT stop discovery.
+     CREATE IMAGE PATHS
 
      Example:
-
        manang-01.jpg
-       manang-02.JPG
-       manang-03.jpg
-       manang-05.JPG
-
-     All four can still be discovered.
-
-     Maximum: 999 photos.
+       manang-02.jpg
+       ...
+       manang-52.jpg
      ========================================================= */
 
-  async function discoverImages(prefix){
+  function createImages(prefix, count) {
 
-    const images=[];
+    const images = [];
 
-    /*
-      We allow gaps between numbers.
+    for (let i = 1; i <= count; i++) {
 
-      For example:
-      01
-      02
-      04
-      05
+      const number =
+        String(i).padStart(2, '0');
 
-      will still work.
-
-      We stop only after several consecutive
-      missing numbers near the end.
-    */
-
-    let consecutiveMissing=0;
-
-    const MAX_CONSECUTIVE_MISSING=10;
-
-    for(
-      let number=1;
-      number<=999;
-      number++
-    ){
-
-      const path=
-        await findImage(
-          prefix,
-          number
-        );
-
-      if(path){
-
-        images.push(path);
-
-        consecutiveMissing=0;
-
-      }else{
-
-        consecutiveMissing++;
-
-        /*
-          If we have found photos before and then
-          encounter many missing numbers in a row,
-          assume the gallery has ended.
-        */
-
-        if(
-          images.length>0 &&
-          consecutiveMissing>=MAX_CONSECUTIVE_MISSING
-        ){
-
-          break;
-
-        }
-
-      }
+      images.push(
+        IMAGE_FOLDER +
+        prefix +
+        '-' +
+        number +
+        '.jpg'
+      );
 
     }
 
@@ -446,17 +352,50 @@
 
 
   /* =========================================================
-     PRELOAD
+     GET GALLERY IMAGES
      ========================================================= */
 
-  function preload(path){
+  function getGalleryImages(prefix) {
 
-    if(!path)return;
+    const key =
+      String(prefix || '')
+        .trim()
+        .toLowerCase();
 
-    const x=
+    const count =
+      PHOTO_COUNTS[key];
+
+    if (!count) {
+
+      console.warn(
+        'No photo count configured for gallery:',
+        prefix
+      );
+
+      return [];
+
+    }
+
+    return createImages(
+      key,
+      count
+    );
+
+  }
+
+
+  /* =========================================================
+     PRELOAD IMAGE
+     ========================================================= */
+
+  function preload(path) {
+
+    if (!path) return;
+
+    const image =
       new Image();
 
-    x.src=path;
+    image.src = path;
 
   }
 
@@ -465,46 +404,65 @@
      RENDER LIGHTBOX
      ========================================================= */
 
-  function render(){
+  function render() {
 
-    if(!s.images.length)return;
+    if (!state.images.length) return;
 
-    const current=
-      s.images[s.index];
-
-    img.src=current;
-
-    img.alt=
-      s.title+
-      ' photograph '+
-      (s.index+1);
-
-    title.textContent=
-      s.title;
-
-    counter.textContent=
-      String(s.index+1).padStart(2,'0')+
-      ' / '+
-      String(s.images.length).padStart(2,'0');
+    const current =
+      state.images[state.index];
 
 
-    const nextIndex=
-      s.index>=s.images.length-1
-      ?0
-      :s.index+1;
+    img.src =
+      current;
 
-    const prevIndex=
-      s.index<=0
-      ?s.images.length-1
-      :s.index-1;
+
+    img.alt =
+      state.title +
+      ' photograph ' +
+      (state.index + 1);
+
+
+    if (title) {
+
+      title.textContent =
+        state.title;
+
+    }
+
+
+    if (counter) {
+
+      counter.textContent =
+        String(
+          state.index + 1
+        ).padStart(2, '0') +
+        ' / ' +
+        String(
+          state.images.length
+        ).padStart(2, '0');
+
+    }
+
+
+    const nextIndex =
+      state.index >=
+      state.images.length - 1
+        ? 0
+        : state.index + 1;
+
+
+    const prevIndex =
+      state.index <= 0
+        ? state.images.length - 1
+        : state.index - 1;
 
 
     preload(
-      s.images[nextIndex]
+      state.images[nextIndex]
     );
 
     preload(
-      s.images[prevIndex]
+      state.images[prevIndex]
     );
 
   }
@@ -514,39 +472,55 @@
      OPEN LIGHTBOX
      ========================================================= */
 
-  function open(
+  function openLightbox(
     prefix,
     index,
     images,
     name
-  ){
+  ) {
 
-    if(
-      !images||
+    if (
+      !images ||
       !images.length
-    ){
+    ) {
       return;
     }
 
-    s={
-      prefix:prefix,
-      title:name,
-      images:images,
-      index:index
+
+    state = {
+
+      prefix: prefix,
+
+      title: name || prefix,
+
+      images: images,
+
+      index: Math.max(
+        0,
+        Math.min(
+          index,
+          images.length - 1
+        )
+      )
+
     };
 
+
     render();
+
 
     lb.classList.add(
       'active'
     );
+
 
     lb.setAttribute(
       'aria-hidden',
       'false'
     );
 
-    document.body.style.overflow=
+
+    document.body.style.overflow =
       'hidden';
 
   }
@@ -556,27 +530,31 @@
      CLOSE LIGHTBOX
      ========================================================= */
 
-  function close(){
+  function closeLightbox() {
 
     lb.classList.remove(
       'active'
     );
+
 
     lb.setAttribute(
       'aria-hidden',
       'true'
     );
 
-    document.body.style.overflow='';
+
+    document.body.style.overflow =
+      '';
+
 
     setTimeout(
-      function(){
+      function () {
 
-        if(
+        if (
           !lb.classList.contains(
             'active'
           )
-        ){
+        ) {
 
           img.removeAttribute(
             'src'
@@ -592,17 +570,18 @@
 
 
   /* =========================================================
-     NEXT
+     NEXT PHOTO
      ========================================================= */
 
-  function next(){
+  function nextPhoto() {
 
-    if(!s.images.length)return;
+    if (!state.images.length) return;
 
-    s.index=
-      s.index>=s.images.length-1
-      ?0
-      :s.index+1;
+    state.index =
+      state.index >=
+      state.images.length - 1
+        ? 0
+        : state.index + 1;
 
     render();
 
@@ -610,17 +589,17 @@
 
 
   /* =========================================================
-     PREVIOUS
+     PREVIOUS PHOTO
      ========================================================= */
 
-  function prev(){
+  function previousPhoto() {
 
-    if(!s.images.length)return;
+    if (!state.images.length) return;
 
-    s.index=
-      s.index<=0
-      ?s.images.length-1
-      :s.index-1;
+    state.index =
+      state.index <= 0
+        ? state.images.length - 1
+        : state.index - 1;
 
     render();
 
@@ -628,50 +607,50 @@
 
 
   /* =========================================================
-     LIGHTBOX CONTROLS
+     LIGHTBOX BUTTONS
      ========================================================= */
 
-  const lightboxClose=
+  const lightboxClose =
     document.getElementById(
       'lightboxClose'
     );
 
-  const lightboxNext=
+  const lightboxNext =
     document.getElementById(
       'lightboxNext'
     );
 
-  const lightboxPrev=
+  const lightboxPrev =
     document.getElementById(
       'lightboxPrev'
     );
 
 
-  if(lightboxClose){
+  if (lightboxClose) {
 
     lightboxClose.addEventListener(
       'click',
-      close
+      closeLightbox
     );
 
   }
 
 
-  if(lightboxNext){
+  if (lightboxNext) {
 
     lightboxNext.addEventListener(
       'click',
-      next
+      nextPhoto
     );
 
   }
 
 
-  if(lightboxPrev){
+  if (lightboxPrev) {
 
     lightboxPrev.addEventListener(
       'click',
-      prev
+      previousPhoto
     );
 
   }
@@ -683,11 +662,11 @@
 
   lb.addEventListener(
     'click',
-    function(e){
+    function (e) {
 
-      if(e.target===lb){
+      if (e.target === lb) {
 
-        close();
+        closeLightbox();
 
       }
 
@@ -701,31 +680,34 @@
 
   document.addEventListener(
     'keydown',
-    function(e){
+    function (e) {
 
-      if(
+      if (
         !lb.classList.contains(
           'active'
         )
-      ){
+      ) {
         return;
       }
 
-      if(e.key==='Escape'){
 
-        close();
+      if (e.key === 'Escape') {
 
-      }
-
-      if(e.key==='ArrowRight'){
-
-        next();
+        closeLightbox();
 
       }
 
-      if(e.key==='ArrowLeft'){
 
-        prev();
+      if (e.key === 'ArrowRight') {
+
+        nextPhoto();
+
+      }
+
+
+      if (e.key === 'ArrowLeft') {
+
+        previousPhoto();
 
       }
 
@@ -737,69 +719,71 @@
      TOUCH SWIPE
      ========================================================= */
 
-  let sx=0;
-  let sy=0;
+  let startX = 0;
+  let startY = 0;
 
 
   lb.addEventListener(
     'touchstart',
-    function(e){
+    function (e) {
 
-      if(
+      if (
         e.changedTouches.length
-      ){
+      ) {
 
-        sx=
+        startX =
           e.changedTouches[0].screenX;
 
-        sy=
+        startY =
           e.changedTouches[0].screenY;
 
       }
 
     },
-    {passive:true}
+    { passive: true }
   );
 
 
   lb.addEventListener(
     'touchend',
-    function(e){
+    function (e) {
 
-      if(
+      if (
         !e.changedTouches.length
-      ){
+      ) {
         return;
       }
 
-      const dx=
-        sx-
+
+      const dx =
+        startX -
         e.changedTouches[0].screenX;
 
-      const dy=
-        sy-
+
+      const dy =
+        startY -
         e.changedTouches[0].screenY;
 
 
-      if(
-        Math.abs(dx)>50 &&
-        Math.abs(dx)>Math.abs(dy)
-      ){
+      if (
+        Math.abs(dx) > 50 &&
+        Math.abs(dx) > Math.abs(dy)
+      ) {
 
-        if(dx>0){
+        if (dx > 0) {
 
-          next();
+          nextPhoto();
 
-        }else{
+        } else {
 
-          prev();
+          previousPhoto();
 
         }
 
       }
 
     },
-    {passive:true}
+    { passive: true }
   );
 
 
@@ -810,72 +794,94 @@
   document.querySelectorAll(
     '[data-gallery]'
   ).forEach(
-    function(g){
+    function (gallery) {
 
-      const grid=
-        g.querySelector(
+      const grid =
+        gallery.querySelector(
           '.gallery-grid'
         );
 
 
-      const btn=
-        g.querySelector(
+      const button =
+        gallery.querySelector(
           '.gallery-toggle'
         );
 
 
-      const headingSmall=
-        g.querySelector(
+      const headingSmall =
+        gallery.querySelector(
           '.gallery-heading small'
         );
 
 
-      const prefix=
-        g.dataset.prefix;
+      if (!grid) return;
 
 
-      const name=
-        g.dataset.title;
+      const prefix =
+        String(
+          gallery.dataset.prefix || ''
+        )
+        .trim()
+        .toLowerCase();
 
 
-      /*
-        The PHOTO fact inside the story.
-      */
+      const name =
+        gallery.dataset.title ||
+        prefix;
 
-      const storyFacts=
-        g.parentElement.querySelector(
-          '.story-facts'
+
+      /* =====================================================
+         GET EXACT IMAGE LIST
+         ===================================================== */
+
+      const galleryImages =
+        getGalleryImages(
+          prefix
         );
 
 
-      let photoFact=null;
+      /* =====================================================
+         STORY PHOTO COUNT
+         ===================================================== */
+
+      const storyFacts =
+        gallery.parentElement
+          ? gallery.parentElement.querySelector(
+              '.story-facts'
+            )
+          : null;
 
 
-      if(storyFacts){
+      let photoFact = null;
 
-        const facts=
+
+      if (storyFacts) {
+
+        const facts =
           storyFacts.querySelectorAll(
             'span'
           );
 
 
         facts.forEach(
-          function(fact){
+          function (fact) {
 
-            const b=
+            const b =
               fact.querySelector(
                 'b'
               );
 
 
-            if(
+            if (
               b &&
               b.textContent
                 .trim()
-                .toUpperCase()==='PHOTOS'
-            ){
+                .toUpperCase() ===
+              'PHOTOS'
+            ) {
 
-              photoFact=fact;
+              photoFact =
+                fact;
 
             }
 
@@ -885,70 +891,49 @@
       }
 
 
-      /*
-        Actual images found in the folder.
-      */
-
-      let galleryImages=[];
-
-      let built=false;
-
-      let discovering=false;
-
-
       /* =====================================================
-         UPDATE ALL PHOTO COUNTS
+         UPDATE COUNTS
          ===================================================== */
 
-      function updatePhotoCounts(){
+      function updatePhotoCounts() {
 
-        const count=
+        const count =
           galleryImages.length;
 
 
-        if(!count){
-
-          return;
-
-        }
+        if (!count) return;
 
 
-        /*
-          1. STORY FACT
-        */
+        /* STORY FACT */
 
-        if(photoFact){
+        if (photoFact) {
 
-          photoFact.innerHTML=
-            '<b>PHOTOS</b> '+
+          photoFact.innerHTML =
+            '<b>PHOTOS</b> ' +
             count;
 
         }
 
 
-        /*
-          2. GALLERY HEADING
-        */
+        /* GALLERY HEADING */
 
-        if(headingSmall){
+        if (headingSmall) {
 
-          headingSmall.textContent=
-            (count+1)+
+          headingSmall.textContent =
+            (count + 1) +
             ' photographs · cover shown above';
 
         }
 
 
-        /*
-          3. GALLERY BUTTON
-        */
+        /* GALLERY BUTTON */
 
-        if(btn){
+        if (button) {
 
-          btn.innerHTML=
-            'Enter the Photo Chapter '+
-            '<span>'+
-            count+
+          button.innerHTML =
+            'Enter the Photo Chapter ' +
+            '<span>' +
+            count +
             ' photos</span> ↓';
 
         }
@@ -956,141 +941,121 @@
       }
 
 
+      updatePhotoCounts();
+
+
       /* =====================================================
          BUILD GALLERY
+
+         Photo 1 = cover.
+         Photos 2 onward = gallery grid.
          ===================================================== */
 
-      async function build(){
-
-        if(
-          built||
-          discovering
-        ){
-
-          return;
-
-        }
+      let built = false;
 
 
-        discovering=true;
+      function buildGallery() {
+
+        if (built) return;
 
 
-        /*
-          Automatically find all images.
-        */
+        if (!galleryImages.length) {
 
-        galleryImages=
-          await discoverImages(
+          console.warn(
+            'No images configured for:',
             prefix
           );
 
-
-        /*
-          Update every visible number.
-        */
-
-        updatePhotoCounts();
-
-
-        /*
-          Cover must exist.
-        */
-
-        if(
-          galleryImages.length===0
-        ){
-
-          discovering=false;
-
           return;
 
         }
 
 
-        /*
-          Photo 1 is the cover.
-
-          Photos 2 onward are placed
-          inside the expandable gallery.
-        */
-
-        const f=
+        const fragment =
           document.createDocumentFragment();
 
 
-        for(
-          let i=1;
-          i<galleryImages.length;
+        for (
+          let i = 1;
+          i < galleryImages.length;
           i++
-        ){
+        ) {
 
-          const fig=
+          const figure =
             document.createElement(
               'figure'
             );
 
 
-          fig.className=
+          figure.className =
             'gallery-photo';
 
 
-          const im=
+          const image =
             document.createElement(
               'img'
             );
 
 
-          im.src=
+          image.src =
             galleryImages[i];
 
 
-          im.alt=
-            name+
-            ' photograph '+
-            (i+1);
+          image.alt =
+            name +
+            ' photograph ' +
+            (i + 1);
 
 
-          im.loading='lazy';
+          image.loading =
+            'lazy';
 
-          im.decoding='async';
+
+          image.decoding =
+            'async';
 
 
-          im.addEventListener(
+          image.addEventListener(
             'load',
-            function(){
+            function () {
 
-              im.classList.add(
+              image.classList.add(
                 'loaded'
               );
 
             },
-            {once:true}
+            { once: true }
           );
 
 
-          im.addEventListener(
+          image.addEventListener(
             'error',
-            function(){
+            function () {
 
-              fig.remove();
+              console.warn(
+                'Image failed to load:',
+                image.src
+              );
+
+              figure.remove();
 
             },
-            {once:true}
+            { once: true }
           );
 
 
-          fig.appendChild(im);
+          figure.appendChild(
+            image
+          );
 
 
-          /*
-            Open lightbox at correct image.
-          */
+          /* OPEN LIGHTBOX */
 
-          fig.addEventListener(
+          figure.addEventListener(
             'click',
-            function(){
+            function () {
 
-              open(
+              openLightbox(
                 prefix,
                 i,
                 galleryImages,
@@ -1101,35 +1066,34 @@
           );
 
 
-          f.appendChild(fig);
+          fragment.appendChild(
+            figure
+          );
 
         }
 
 
-        grid.appendChild(f);
+        grid.appendChild(
+          fragment
+        );
 
 
-        built=true;
-
-        discovering=false;
-
-
-        updatePhotoCounts();
+        built = true;
 
       }
 
 
       /* =====================================================
-         GALLERY OPEN / CLOSE BUTTON
+         GALLERY OPEN / CLOSE
          ===================================================== */
 
-      if(btn){
+      if (button) {
 
-        btn.addEventListener(
+        button.addEventListener(
           'click',
-          async function(){
+          function () {
 
-            const openState=
+            const isOpen =
               grid.classList.contains(
                 'open'
               );
@@ -1137,22 +1101,20 @@
 
             /* OPEN */
 
-            if(!openState){
+            if (!isOpen) {
 
-              await build();
+              buildGallery();
 
 
-              if(
+              if (
                 !galleryImages.length
-              ){
-
+              ) {
                 return;
-
               }
 
 
               requestAnimationFrame(
-                function(){
+                function () {
 
                   grid.classList.add(
                     'open'
@@ -1164,17 +1126,17 @@
               );
 
 
-              btn.setAttribute(
+              button.setAttribute(
                 'aria-expanded',
                 'true'
               );
 
 
-              btn.innerHTML=
+              button.innerHTML =
                 'Return to the Journey <span>↑</span>';
 
 
-              btn.classList.add(
+              button.classList.add(
                 'gallery-floating'
               );
 
@@ -1183,14 +1145,14 @@
 
             /* CLOSE */
 
-            else{
+            else {
 
-              btn.classList.remove(
+              button.classList.remove(
                 'gallery-floating'
               );
 
 
-              btn.setAttribute(
+              button.setAttribute(
                 'aria-expanded',
                 'false'
               );
@@ -1215,56 +1177,57 @@
          FLOATING BUTTON
          ===================================================== */
 
-      function checkGalleryEnd(){
+      function checkGalleryEnd() {
 
-        if(
+        if (
           !grid.classList.contains(
             'open'
           )
-        ){
-
+        ) {
           return;
-
         }
 
 
-        const galleryRect=
-          g.getBoundingClientRect();
+        if (!button) return;
 
 
-        const buttonHeight=
-          btn.offsetHeight;
+        const galleryRect =
+          gallery.getBoundingClientRect();
 
 
-        const gap=35;
+        const buttonHeight =
+          button.offsetHeight;
 
 
-        const floatTop=
-          window.innerHeight-
-          buttonHeight-
+        const gap = 35;
+
+
+        const floatTop =
+          window.innerHeight -
+          buttonHeight -
           gap;
 
 
-        const galleryTop=
+        const galleryTop =
           galleryRect.top;
 
 
-        const galleryBottom=
+        const galleryBottom =
           galleryRect.bottom;
 
 
-        if(
-          galleryTop<floatTop &&
-          galleryBottom>floatTop
-        ){
+        if (
+          galleryTop < floatTop &&
+          galleryBottom > floatTop
+        ) {
 
-          btn.classList.add(
+          button.classList.add(
             'gallery-floating'
           );
 
-        }else{
+        } else {
 
-          btn.classList.remove(
+          button.classList.remove(
             'gallery-floating'
           );
 
@@ -1276,7 +1239,7 @@
       window.addEventListener(
         'scroll',
         checkGalleryEnd,
-        {passive:true}
+        { passive: true }
       );
 
 
@@ -1287,45 +1250,32 @@
 
 
       /* =====================================================
-         COVER IMAGE OPENS LIGHTBOX
+         COVER IMAGE
          ===================================================== */
 
-      const cover=
-        g.parentElement.querySelector(
-          '.feature-image'
-        );
+      const cover =
+        gallery.parentElement
+          ? gallery.parentElement.querySelector(
+              '.feature-image'
+            )
+          : null;
 
 
-      if(cover){
+      if (cover) {
 
-        cover.style.cursor=
+        cover.style.cursor =
           'pointer';
 
 
         cover.addEventListener(
           'click',
-          async function(){
+          function () {
 
-            if(
-              !galleryImages.length
-            ){
-
-              galleryImages=
-                await discoverImages(
-                  prefix
-                );
-
-
-              updatePhotoCounts();
-
-            }
-
-
-            if(
+            if (
               galleryImages.length
-            ){
+            ) {
 
-              open(
+              openLightbox(
                 prefix,
                 0,
                 galleryImages,
@@ -1339,23 +1289,6 @@
 
       }
 
-
-      /* =====================================================
-         INITIAL PHOTO COUNT
-         ===================================================== */
-
-      (async function(){
-
-        galleryImages=
-          await discoverImages(
-            prefix
-          );
-
-
-        updatePhotoCounts();
-
-      })();
-
     }
   );
 
@@ -1366,26 +1299,26 @@
    SCROLL TO TOP BUTTON
    ========================================================= */
 
-(function(){
+(function () {
   'use strict';
 
-  const scrollTop=
+  const scrollTop =
     document.getElementById(
       'scrollTop'
     );
 
-  if(!scrollTop)return;
+  if (!scrollTop) return;
 
 
-  function updateScrollTop(){
+  function updateScrollTop() {
 
-    if(window.scrollY>500){
+    if (window.scrollY > 500) {
 
       scrollTop.classList.add(
         'visible'
       );
 
-    }else{
+    } else {
 
       scrollTop.classList.remove(
         'visible'
@@ -1399,17 +1332,17 @@
   window.addEventListener(
     'scroll',
     updateScrollTop,
-    {passive:true}
+    { passive: true }
   );
 
 
   scrollTop.addEventListener(
     'click',
-    function(){
+    function () {
 
       window.scrollTo({
-        top:0,
-        behavior:'smooth'
+        top: 0,
+        behavior: 'smooth'
       });
 
     }

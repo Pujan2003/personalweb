@@ -119,3 +119,48 @@
     display: block;
     border-radius: inherit;
 }
+/* =========================================================
+   LIGHT GALLERY LOADING ANIMATION
+   ========================================================= */
+
+.gallery-toggle.gallery-loading {
+  pointer-events: none;
+  opacity: 0.75;
+}
+
+.gallery-toggle.gallery-loading .loading-dots {
+  display: inline-flex;
+  gap: 3px;
+  margin-left: 4px;
+}
+
+.gallery-toggle.gallery-loading .loading-dots span {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: currentColor;
+  display: inline-block;
+  animation: galleryLoadingDot 1.2s infinite ease-in-out;
+}
+
+.gallery-toggle.gallery-loading .loading-dots span:nth-child(2) {
+  animation-delay: 0.15s;
+}
+
+.gallery-toggle.gallery-loading .loading-dots span:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+@keyframes galleryLoadingDot {
+  0%,
+  60%,
+  100% {
+    opacity: 0.25;
+    transform: translateY(0);
+  }
+
+  30% {
+    opacity: 1;
+    transform: translateY(-2px);
+  }
+}

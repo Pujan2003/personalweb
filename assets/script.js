@@ -1289,15 +1289,35 @@
 
           if (!isOpen) {
 
+            /* Show lightweight loading animation */
+
+            button.classList.add('gallery-loading');
+
+            button.innerHTML =
+              'Loading photos ' +
+              '<span class="loading-dots">' +
+                '<span></span>' +
+                '<span></span>' +
+                '<span></span>' +
+              '</span>';
+
+
             await buildGallery();
+
+
+            button.classList.remove('gallery-loading');
 
 
             if (
               !galleryImages.length
             ) {
-              return;
-            }
 
+              button.innerHTML =
+                'Photos unavailable';
+
+              return;
+
+            }
 
             requestAnimationFrame(
               function () {

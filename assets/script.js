@@ -1289,7 +1289,7 @@
 
           if (!isOpen) {
 
-            /* Show lightweight loading animation */
+            /* Show lightweight loading animation immediately */
 
             button.classList.add('gallery-loading');
 
@@ -1302,11 +1302,32 @@
               '</span>';
 
 
+            /* Keep loading indicator visible briefly */
+
+            const loadingStart = performance.now();
+
             await buildGallery();
+
+            const loadingTime =
+              performance.now() - loadingStart;
+
+            const minimumLoadingTime = 350;
+
+            if (loadingTime < minimumLoadingTime) {
+
+              await new Promise(function (resolve) {
+
+                setTimeout(
+                  resolve,
+                  minimumLoadingTime - loadingTime
+                );
+
+              });
+
+            }
 
 
             button.classList.remove('gallery-loading');
-
 
             if (
               !galleryImages.length

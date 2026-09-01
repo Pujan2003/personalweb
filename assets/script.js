@@ -249,17 +249,11 @@
    TRAVEL GALLERIES + LIGHTBOX
    OPTIMIZED VERSION
 
+   Galleries are loaded only when requested.
+
    IMPORTANT:
-
-   The old version searched every gallery during page load.
-
-   This version does NOT do that.
-
-   Galleries are discovered only when:
-   - The user opens a gallery
-   - The user clicks a cover photo
-
-   This dramatically reduces initial page loading time.
+   The actual filenames are listed below so the browser
+   does NOT waste time trying .jpg, .JPG, .jpeg and .JPEG.
    ========================================================= */
 
 (function () {
@@ -295,6 +289,229 @@
 
 
   /* =========================================================
+     EXACT GALLERY FILES
+
+     These match the current files in GitHub exactly.
+     ========================================================= */
+
+  const GALLERY_FILES = {
+
+    amayangri: [
+      'amayangri-01.jpg',
+      'amayangri-02.JPG',
+      'amayangri-03.JPG',
+      'amayangri-04.JPG',
+      'amayangri-05.JPG',
+      'amayangri-06.JPG',
+      'amayangri-07.JPG',
+      'amayangri-08.jpg',
+      'amayangri-09.JPG',
+      'amayangri-10.JPG',
+      'amayangri-11.JPG',
+      'amayangri-12.JPG',
+      'amayangri-13.jpg',
+      'amayangri-14.JPG',
+      'amayangri-15.JPG',
+      'amayangri-16.JPG',
+      'amayangri-17.jpg',
+      'amayangri-18.JPG',
+      'amayangri-19.JPG',
+      'amayangri-20.jpg',
+      'amayangri-21.JPG',
+      'amayangri-22.JPG',
+      'amayangri-23.JPG',
+      'amayangri-24.jpg',
+      'amayangri-25.JPG',
+      'amayangri-26.JPG'
+    ],
+
+    ilam: [
+      'ilam-01.jpg',
+      'ilam-02.jpg',
+      'ilam-03.jpg',
+      'ilam-04.JPG',
+      'ilam-05.JPG',
+      'ilam-06.JPG'
+    ],
+
+    kuri: [
+      'kuri-01.jpg',
+      'kuri-02.JPG',
+      'kuri-03.JPG',
+      'kuri-04.JPG',
+      'kuri-05.jpg',
+      'kuri-06.JPG',
+      'kuri-07.JPG',
+      'kuri-08.JPG',
+      'kuri-09.JPG',
+      'kuri-10.JPG',
+      'kuri-11.JPG',
+      'kuri-12.JPG',
+      'kuri-13.JPG',
+      'kuri-14.JPG',
+      'kuri-15.JPG',
+      'kuri-16.JPG',
+      'kuri-17.JPG',
+      'kuri-18.JPG'
+    ],
+
+    manang: [
+      'manang-01.jpg',
+      'manang-02.jpg',
+      'manang-03.JPG',
+      'manang-04.JPG',
+      'manang-05.JPG',
+      'manang-06.JPG',
+      'manang-07.jpg',
+      'manang-08.jpg',
+      'manang-09.jpg',
+      'manang-10.JPG',
+      'manang-11.jpg',
+      'manang-12.JPG',
+      'manang-13.jpg',
+      'manang-14.JPG',
+      'manang-15.JPG',
+      'manang-16.JPG',
+      'manang-17.JPG',
+      'manang-18.JPG',
+      'manang-19.JPG',
+      'manang-20.jpg',
+      'manang-21.JPG',
+      'manang-22.JPG',
+      'manang-23.JPG',
+      'manang-24.JPG',
+      'manang-25.jpg',
+      'manang-26.JPG',
+      'manang-27.jpg',
+      'manang-28.JPG',
+      'manang-29.jpg',
+      'manang-30.JPG',
+      'manang-31.JPG',
+      'manang-32.JPG',
+      'manang-33.JPG',
+      'manang-34.JPG',
+      'manang-35.JPG',
+      'manang-36.jpg',
+      'manang-37.JPG',
+      'manang-38.JPG',
+      'manang-39.JPG',
+      'manang-40.JPG',
+      'manang-41.JPG',
+      'manang-42.jpg',
+      'manang-43.jpg',
+      'manang-44.JPG',
+      'manang-45.JPG',
+      'manang-46.JPG',
+      'manang-47.JPG',
+      'manang-48.JPG',
+      'manang-49.JPG',
+      'manang-50.jpg',
+      'manang-51.jpg',
+      'manang-52.JPG'
+    ],
+
+    manungkot: [
+      'manungkot-01.jpg',
+      'manungkot-02.jpg',
+      'manungkot-03.jpg',
+      'manungkot-04.jpg',
+      'manungkot-05.jpg',
+      'manungkot-06.jpg'
+    ],
+
+    mustang: [
+      'mustang-01.jpg',
+      'mustang-02.jpg',
+      'mustang-03.jpg',
+      'mustang-04.jpg',
+      'mustang-05.jpg',
+      'mustang-06.jpg',
+      'mustang-07.jpg',
+      'mustang-08.jpg',
+      'mustang-09.jpg',
+      'mustang-10.jpg',
+      'mustang-11.jpg',
+      'mustang-12.jpg',
+      'mustang-13.jpg',
+      'mustang-14.jpg',
+      'mustang-15.jpg',
+      'mustang-16.jpg',
+      'mustang-17.jpg',
+      'mustang-18.jpg',
+      'mustang-19.jpg',
+      'mustang-20.jpg',
+      'mustang-21.jpg',
+      'mustang-22.jpg',
+      'mustang-23.jpg'
+    ],
+
+    pathibhara: [
+      'pathibhara-01.jpg',
+      'pathibhara-02.JPG',
+      'pathibhara-03.jpg',
+      'pathibhara-04.jpg',
+      'pathibhara-05.JPG',
+      'pathibhara-06.JPG',
+      'pathibhara-07.jpg',
+      'pathibhara-08.JPG',
+      'pathibhara-09.JPG',
+      'pathibhara-10.JPG',
+      'pathibhara-11.JPG',
+      'pathibhara-12.JPG',
+      'pathibhara-13.JPG',
+      'pathibhara-14.JPG',
+      'pathibhara-15.jpg',
+      'pathibhara-16.JPG',
+      'pathibhara-17.jpg'
+    ],
+
+    pikey: [
+      'pikey-01.jpg',
+      'pikey-02.jpg',
+      'pikey-03.jpg',
+      'pikey-04.jpg',
+      'pikey-05.jpg',
+      'pikey-06.jpg',
+      'pikey-07.jpg',
+      'pikey-08.jpg',
+      'pikey-09.jpg',
+      'pikey-10.jpg',
+      'pikey-11.jpg',
+      'pikey-12.jpg',
+      'pikey-13.jpg',
+      'pikey-14.jpg',
+      'pikey-15.jpg',
+      'pikey-16.jpg',
+      'pikey-17.jpg',
+      'pikey-18.jpg',
+      'pikey-19.jpg',
+      'pikey-20.jpg',
+      'pikey-21.jpg',
+      'pikey-22.jpg',
+      'pikey-23.jpg',
+      'pikey-24.jpg',
+      'pikey-25.jpg'
+    ],
+
+    sandakpur: [
+      'sandakpur-01.jpg',
+      'sandakpur-02.JPG',
+      'sandakpur-03.JPG',
+      'sandakpur-04.JPG',
+      'sandakpur-05.JPG',
+      'sandakpur-06.JPG',
+      'sandakpur-07.JPG',
+      'sandakpur-08.JPG',
+      'sandakpur-09.JPG',
+      'sandakpur-10.JPG',
+      'sandakpur-11.JPG',
+      'sandakpur-12.jpg'
+    ]
+
+  };
+
+
+  /* =========================================================
      LIGHTBOX STATE
      ========================================================= */
 
@@ -308,112 +525,17 @@
 
   /* =========================================================
      GALLERY CACHE
-
-     Once a gallery has been discovered, its image list
-     stays in memory.
-
-     Opening the same gallery again will NOT search the
-     files again.
      ========================================================= */
 
   const galleryCache = new Map();
 
 
   /* =========================================================
-     FIND ONE IMAGE
-
-     Supports:
-
-       .jpg
-       .JPG
-       .jpeg
-       .JPEG
-
-     This function is only called when a gallery is actually
-     needed.
-     ========================================================= */
-
-  function findImage(prefix, number) {
-
-    return new Promise(function (resolve) {
-
-      const padded =
-        String(number).padStart(2, '0');
-
-      const extensions = [
-        '.jpg',
-        '.JPG',
-        '.jpeg',
-        '.JPEG'
-      ];
-
-      let extensionIndex = 0;
-
-
-      function tryNext() {
-
-        if (
-          extensionIndex >=
-          extensions.length
-        ) {
-
-          resolve(null);
-          return;
-
-        }
-
-
-        const path =
-          IMAGE_FOLDER +
-          prefix +
-          '-' +
-          padded +
-          extensions[extensionIndex];
-
-
-        const test =
-          new Image();
-
-
-        test.onload =
-          function () {
-
-            resolve(path);
-
-          };
-
-
-        test.onerror =
-          function () {
-
-            extensionIndex++;
-
-            tryNext();
-
-          };
-
-
-        test.src = path;
-
-      }
-
-
-      tryNext();
-
-    });
-
-  }
-
-
-  /* =========================================================
      DISCOVER GALLERY
 
-     IMPORTANT PERFORMANCE CHANGE:
+     No network requests are needed here.
 
-     This function is NOT called for every gallery during
-     page load.
-
-     It runs only when the gallery is actually requested.
+     The exact filenames are already known.
      ========================================================= */
 
   async function discoverImages(prefix) {
@@ -423,62 +545,19 @@
     }
 
 
-    const images = [];
-
-    /*
-      Your galleries currently have relatively small,
-      continuous numbering.
-
-      We allow gaps, but stop after 4 consecutive missing
-      numbers once images have already been found.
-
-      This is much faster than the previous 10-gap search.
-    */
-
-    let consecutiveMissing = 0;
-
-    const MAX_CONSECUTIVE_MISSING = 4;
-
-    /*
-      999 remains a safety limit.
-    */
-
-    for (
-      let number = 1;
-      number <= 999;
-      number++
-    ) {
-
-      const path =
-        await findImage(
-          prefix,
-          number
-        );
+    const files =
+      GALLERY_FILES[prefix] || [];
 
 
-      if (path) {
+    const images =
+      files.map(
+        function (filename) {
 
-        images.push(path);
-
-        consecutiveMissing = 0;
-
-      } else {
-
-        consecutiveMissing++;
-
-        if (
-          images.length > 0 &&
-          consecutiveMissing >=
-          MAX_CONSECUTIVE_MISSING
-        ) {
-
-          break;
+          return IMAGE_FOLDER +
+            filename;
 
         }
-
-      }
-
-    }
+      );
 
 
     galleryCache.set(
@@ -1052,6 +1131,7 @@
 
         /*
           Discover only this gallery.
+          This is now instant.
         */
 
         galleryImages =
@@ -1289,9 +1369,14 @@
 
           if (!isOpen) {
 
-            /* Show lightweight loading animation immediately */
+            /* -----------------------------------------------
+               Show lightweight loading animation
+               ----------------------------------------------- */
 
-            button.classList.add('gallery-loading');
+            button.classList.add(
+              'gallery-loading'
+            );
+
 
             button.innerHTML =
               'Loading photos ' +
@@ -1302,32 +1387,56 @@
               '</span>';
 
 
-            /* Keep loading indicator visible briefly */
+            /*
+              IMPORTANT:
 
-            const loadingStart = performance.now();
+              Give the browser one frame to paint the
+              loading animation before continuing.
+            */
+
+            await new Promise(
+              function (resolve) {
+
+                requestAnimationFrame(
+                  function () {
+
+                    resolve();
+
+                  }
+                );
+
+              }
+            );
+
+
+            /*
+              Build the gallery.
+            */
 
             await buildGallery();
 
-            const loadingTime =
-              performance.now() - loadingStart;
 
-            const minimumLoadingTime = 350;
+            /*
+              Keep the loading animation visible briefly
+              so it can actually be seen.
+            */
 
-            if (loadingTime < minimumLoadingTime) {
-
-              await new Promise(function (resolve) {
+            await new Promise(
+              function (resolve) {
 
                 setTimeout(
                   resolve,
-                  minimumLoadingTime - loadingTime
+                  350
                 );
 
-              });
+              }
+            );
 
-            }
 
+            button.classList.remove(
+              'gallery-loading'
+            );
 
-            button.classList.remove('gallery-loading');
 
             if (
               !galleryImages.length
@@ -1339,6 +1448,11 @@
               return;
 
             }
+
+
+            /*
+              Open gallery after loading.
+            */
 
             requestAnimationFrame(
               function () {
@@ -1462,9 +1576,9 @@
       /*
         IMPORTANT:
 
-        There is NO initial discoverImages() call here.
+        There is NO initial gallery loading here.
 
-        This is the main performance improvement.
+        Galleries are still loaded only when requested.
       */
 
     }

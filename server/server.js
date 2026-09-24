@@ -852,32 +852,34 @@ app.post("/api/chat", async (req, res) => {
       );
       console.log("User message:", userMessage);
 console.log("Using browser search:", useWebSearch);
-      const completion =
-        await groq.responses.create({
+const completion =
+  await groq.responses.create({
 
-          model: "openai/gpt-oss-20b",
+    model: "openai/gpt-oss-20b",
 
-          input: [
+    input: [
+      {
+        role: "system",
+        content: SYSTEM_INSTRUCTION
+      },
+      ...recentHistory
+    ],
+
+    ...(useWebSearch
+      ? {
+          tool_choice: "required",
+
+          tools: [
             {
-              role: "system",
-              content: SYSTEM_INSTRUCTION
-            },
-            ...recentHistory
-          ],
+              type: "browser_search"
+            }
+          ]
+        }
+      : {
+          tool_choice: "none"
+        })
 
-          ...(useWebSearch
-            ? {
-                tool_choice: "required",
-
-                tools: [
-                  {
-                    type: "browser_search"
-                  }
-                ]
-              }
-            : {})
-
-        });
+  });
 
 
       let reply =

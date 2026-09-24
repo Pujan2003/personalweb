@@ -10,8 +10,28 @@ const PORT = process.env.PORT || 3000;
 function needsWebSearch(message) {
 
   const text = message.toLowerCase().trim();
+  const personalQuestion = [
+    "have i been",
+    "did i go",
+    "did i visit",
+    "have i visited",
+    "did pujan",
+    "what did pujan",
+    "what was pujan",
+    "where did i go",
+    "where have i been",
+    "my journey",
+    "my experience",
+    "my experiences",
+    "my trip",
+    "my trips"
+  ];
 
-  // Current / changing information
+  if (personalQuestion.some(keyword => text.includes(keyword))) {
+    return false;
+  }
+
+  // Information that can change over time
   const currentInfo = [
     "right now",
     "currently",
@@ -25,14 +45,21 @@ function needsWebSearch(message) {
     "temperature",
     "open now",
     "closed now",
+    "latest",
+    "recent",
     "road condition",
     "road conditions",
     "road status",
-    "latest",
-    "recent"
+    "closure",
+    "closed",
+    "permit",
+    "price",
+    "cost",
+    "schedule"
   ];
 
-  // Precise geographical information
+  // Questions asking about a specific place, mountain,
+  // trail, region, district, elevation, distance, etc.
   const geography = [
     "where is",
     "where are",
@@ -46,29 +73,41 @@ function needsWebSearch(message) {
     "longitude",
     "which district",
     "which region",
+    "which province",
     "how far",
     "distance",
     "how many km",
     "kilometers",
-    "kilometres"
+    "kilometres",
+    "mountain",
+    "peak",
+    "trek",
+    "trekking",
+    "trail",
+    "route",
+    "pass",
+    "lake",
+    "valley",
+    "village",
+    "hill",
+    "himalaya"
   ];
 
-  // Travel information that can change or needs verification
+  // Travel logistics that may require verification
   const travelUpdates = [
-    "route",
-    "road",
-    "roads",
-    "permit",
-    "price",
-    "cost",
     "bus",
     "jeep",
     "transport",
-    "schedule",
+    "road",
+    "roads",
+    "flight",
+    "flights",
+    "hotel",
+    "accommodation",
     "opening",
-    "closure",
-    "closed",
-    "trekking permit"
+    "booking",
+    "guide",
+    "guides"
   ];
 
   return (
@@ -811,27 +850,20 @@ app.post("/api/chat", async (req, res) => {
       console.log(
         `Web search required: ${useWebSearch}`
       );
-
+      console.log("User message:", userMessage);
+console.log("Using browser search:", useWebSearch);
       const completion =
-        await groq.chat.completions.create({
+        await groq.responses.create({
 
           model: "openai/gpt-oss-20b",
 
-          messages: [
-
+          input: [
             {
               role: "system",
-
-              content:
-                SYSTEM_INSTRUCTION
-
+              content: SYSTEM_INSTRUCTION
             },
-
             ...recentHistory
-
           ],
-
-          reasoning_effort: "low",
 
           ...(useWebSearch
             ? {
@@ -849,10 +881,7 @@ app.post("/api/chat", async (req, res) => {
 
 
       let reply =
-        completion
-          .choices?.[0]
-          ?.message
-          ?.content;
+        completion.output_text || "";
 
 
       if (!isUsableReply(reply)) {

@@ -1859,7 +1859,7 @@ async function sendAIMessage() {
   addAIMessage("THE JOURNAL", '<span class="ai-thinking"><span></span><span></span><span></span></span>', "bot");
 
   try {
-    const response = await fetch("http://localhost:3000/api/chat", {
+    const response = await fetch("https://beyond-the-trail-ai.onrender.com/api/chat", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"

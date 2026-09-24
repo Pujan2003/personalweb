@@ -6,7 +6,7 @@ const OpenAI = require("openai");
 dotenv.config();
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 function needsWebSearch(message) {
 
   const text = message.toLowerCase().trim();

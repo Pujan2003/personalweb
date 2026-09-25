@@ -875,7 +875,8 @@ const completion =
             }
           ]
         }
-      : { })
+      : { tool_choice: "none"
+        })
 
   });
 
